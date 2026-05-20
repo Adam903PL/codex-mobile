@@ -63,7 +63,7 @@ def pair(
 @app.command()
 def connect(
     interval: float = typer.Option(5.0, "--interval", help="Polling interval in seconds."),
-    api_url: str | None = typer.Option(None, "--api-url", help="Nadpisz adres backendu DevLink (np. http://192.168.0.17:8000/api)."),
+    api_url: str | None = typer.Option(None, "--api-url", help="Nadpisz adres backendu DevLink (np. http://192.168.0.238:8000/api)."),
     persist_api_url: bool = typer.Option(False, "--persist-api-url", help="Zapisz --api-url do lokalnego configu."),
 ) -> None:
     """Run the polling loop and execute tasks assigned to this device."""
