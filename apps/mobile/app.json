@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "DevLink",
+    "slug": "devlink",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "updates": {
+      "enabled": false
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "softwareKeyboardLayoutMode": "resize",
+      "adaptiveIcon": {
+        "backgroundColor": "#0f172a"
+      }
+    },
+    "extra": {
+      "apiUrl": "http://192.168.0.17:8000/api"
+    },
+    "plugins": [
+      "expo-secure-store"
+    ]
+  }
+}

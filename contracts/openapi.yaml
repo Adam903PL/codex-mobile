@@ -1,0 +1,32 @@
+openapi: 3.0.3
+info:
+  title: DevLink API
+  version: 0.1.0
+  description: REST API dla mobile i lokalnego CLI DevLink.
+paths:
+  /api/auth/register/:
+    post:
+      summary: Register a new user
+  /api/auth/login/:
+    post:
+      summary: Obtain JWT token pair
+  /api/pairing-codes/:
+    post:
+      summary: Create a short-lived pairing code
+  /api/cli/pair/:
+    post:
+      summary: Pair a local computer with a user account
+  /api/devices/:
+    get:
+      summary: List current user's devices
+  /api/projects/:
+    get:
+      summary: List current user's registered projects
+  /api/tasks/:
+    get:
+      summary: List tasks
+    post:
+      summary: Create a new task for a registered project
+  /api/cli/tasks/next/:
+    get:
+      summary: Claim the next queued task for the authenticated device

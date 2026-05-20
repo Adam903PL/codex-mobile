@@ -1,0 +1,44 @@
+.env
+apps/backend/.env
+.env.*
+!.env.example
+
+# Local agent / Codex state
+.agents/
+.codex-logs/
+.codex/
+.runtime/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+db.sqlite3
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.log
+logs/
+apps/backend/logs/
+
+# Node / Expo
+node_modules/
+.expo/
+.expo-shared/
+dist/
+build/
+coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Generated local notes/dumps
+frontend-tsx-dump.md

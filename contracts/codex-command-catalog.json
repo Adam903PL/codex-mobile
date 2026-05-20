@@ -1,0 +1,689 @@
+{
+  "schemaVersion": 1,
+  "catalogVersion": "2026-05-15",
+  "codexVersion": "codex-cli 0.130.0",
+  "auditDate": "2026-05-15",
+  "sources": [
+    "local:codex --version",
+    "local:codex --help",
+    "local:codex <command> --help",
+    "https://developers.openai.com/codex/cli",
+    "https://developers.openai.com/codex/cli/reference",
+    "https://developers.openai.com/codex/noninteractive",
+    "https://developers.openai.com/codex/agent-approvals-security",
+    "https://developers.openai.com/codex/mcp"
+  ],
+  "supportLevels": [
+    "mvp",
+    "full_app",
+    "advanced",
+    "dangerous",
+    "experimental"
+  ],
+  "riskLevels": [
+    "low",
+    "medium",
+    "high",
+    "critical"
+  ],
+  "defaultMvpInvocation": {
+    "argv": [
+      "codex",
+      "exec",
+      "--cd",
+      "<project_path>",
+      "--json",
+      "--sandbox",
+      "workspace-write",
+      "-"
+    ],
+    "stdin": "task.prompt",
+    "shell": false,
+    "notes": "Prompt is passed through stdin. The project path must come from a Project registered locally by DevLink CLI."
+  },
+  "globalOptions": [
+    {
+      "name": "--config",
+      "alias": "-c",
+      "value": "key=value",
+      "supportLevel": "advanced",
+      "riskLevel": "high",
+      "requiresConfirmation": true,
+      "notes": "Only allowlisted config overrides should be exposed."
+    },
+    {
+      "name": "--enable",
+      "value": "FEATURE",
+      "supportLevel": "advanced",
+      "riskLevel": "high",
+      "requiresConfirmation": true,
+      "notes": "Changes effective feature flags for the run."
+    },
+    {
+      "name": "--disable",
+      "value": "FEATURE",
+      "supportLevel": "advanced",
+      "riskLevel": "high",
+      "requiresConfirmation": true,
+      "notes": "Changes effective feature flags for the run."
+    },
+    {
+      "name": "--model",
+      "alias": "-m",
+      "value": "MODEL",
+      "supportLevel": "full_app",
+      "riskLevel": "medium",
+      "requiresConfirmation": false,
+      "notes": "Can be a project or task setting."
+    },
+    {
+      "name": "--profile",
+      "alias": "-p",
+      "value": "CONFIG_PROFILE",
+      "supportLevel": "full_app",
+      "riskLevel": "medium",
+      "requiresConfirmation": false,
+      "notes": "Uses a local Codex config profile."
+    },
+    {
+      "name": "--sandbox",
+      "alias": "-s",
+      "value": "read-only|workspace-write|danger-full-access",
+      "supportLevel": "mvp",
+      "riskLevel": "medium",
+      "requiresConfirmation": false,
+      "notes": "MVP allows workspace-write. danger-full-access is critical and must be blocked until approval flow."
+    },
+    {
+      "name": "--dangerously-bypass-approvals-and-sandbox",
+      "supportLevel": "dangerous",
+      "riskLevel": "critical",
+      "requiresConfirmation": true,
+      "notes": "Blocked by default. Only acceptable in a separately sandboxed test environment."
+    },
+    {
+      "name": "--cd",
+      "alias": "-C",
+      "value": "DIR",
+      "supportLevel": "mvp",
+      "riskLevel": "medium",
+      "requiresConfirmation": false,
+      "notes": "Must be resolved from a registered local Project, never raw mobile input."
+    },
+    {
+      "name": "--add-dir",
+      "value": "DIR",
+      "supportLevel": "dangerous",
+      "riskLevel": "high",
+      "requiresConfirmation": true,
+      "notes": "Expands filesystem access beyond the selected project."
+    },
+    {
+      "name": "--ask-for-approval",
+      "alias": "-a",
+      "value": "untrusted|on-failure|on-request|never",
+      "supportLevel": "full_app",
+      "riskLevel": "medium",
+      "requiresConfirmation": true,
+      "notes": "on-failure is deprecated in local help. never is not the MVP default."
+    },
+    {
+      "name": "--search",
+      "supportLevel": "advanced",
+      "riskLevel": "medium",
+      "requiresConfirmation": true,
+      "notes": "Enables live web search for the model."
+    },
+    {
+      "name": "--image",
+      "alias": "-i",
+      "value": "FILE",
+      "supportLevel": "advanced",
+      "riskLevel": "medium",
+      "requiresConfirmation": false,
+      "notes": "Future local attachment support."
+    },
+    {
+      "name": "--remote",
+      "value": "ADDR",
+      "supportLevel": "experimental",
+      "riskLevel": "critical",
+      "requiresConfirmation": true,
+      "notes": "Remote app server connectivity is not part of MVP."
+    }
+  ],
+  "commands": [
+    {
+      "id": "interactive",
+      "command": "codex",
+      "subcommands": [],
+      "options": [
+        "PROMPT",
+        "--model",
+        "--profile",
+        "--sandbox",
+        "--ask-for-approval",
+        "--search",
+        "--remote"
+      ],
+      "supportLevel": "full_app",
+      "riskLevel": "medium",
+      "requiresConfirmation": true,
+      "requiresLocalOnly": true,
+      "devlinkSurface": "Future realtime interactive agent panel",
+      "plannedStage": 10,
+      "sources": [
+        "local:codex --help",
+        "https://developers.openai.com/codex/cli"
+      ],
+      "notes": "Not part of MVP because it requires realtime UI and session control."
+    },
+    {
+      "id": "exec",
+      "command": "codex exec",
+      "subcommands": [
+        "resume",
+        "review"
+      ],
+      "options": [
+        "PROMPT",
+        "--json",
+        "--cd",
+        "--sandbox",
+        "--model",
+        "--profile",
+        "--image",
+        "--output-last-message",
+        "--output-schema",
+        "--skip-git-repo-check",
+        "--ephemeral",
+        "--ignore-user-config",
+        "--ignore-rules"
+      ],
+      "supportLevel": "mvp",
+      "riskLevel": "medium",
+      "requiresConfirmation": false,
+      "requiresLocalOnly": true,
+      "devlinkSurface": "Task creation and execution from mobile",
+      "plannedStage": 5,
+      "sources": [
+        "local:codex exec --help",
+        "https://developers.openai.com/codex/noninteractive"
+      ],
+      "notes": "Primary MVP command. Use stdin and no shell."
+    },
+    {
+      "id": "exec-resume",
+      "command": "codex exec resume",
+      "subcommands": [],
+      "options": [
+        "SESSION_ID",
+        "PROMPT",
+        "--last",
+        "--all",
+        "--json",
+        "--output-last-message",
+        "--model",
+        "--image"
+      ],
+      "supportLevel": "full_app",
+      "riskLevel": "medium",
+      "requiresConfirmation": true,
+      "requiresLocalOnly": true,
+      "devlinkSurface": "Continue a stored non-interactive task session",
+      "plannedStage": 6,
+      "sources": [
+        "local:codex exec resume --help",
+        "https://developers.openai.com/codex/noninteractive"
+      ],
+      "notes": "Requires storing Codex thread/session id."
+    },
+    {
+      "id": "exec-review",
+      "command": "codex exec review",
+      "subcommands": [],
+      "options": [
+        "PROMPT",
+        "--uncommitted",
+        "--base",
+        "--commit",
+        "--title",
+        "--json",
+        "--output-last-message"
+      ],
+      "supportLevel": "full_app",
+      "riskLevel": "medium",
+      "requiresConfirmation": true,
+      "requiresLocalOnly": true,
+      "devlinkSurface": "Non-interactive code review task",
+      "plannedStage": 7,
+      "sources": [
+        "local:codex exec review --help"
+      ],
+      "notes": "Can share TaskEvent pipeline with exec."
+    },
+    {
+      "id": "review",
+      "command": "codex review",
+      "subcommands": [],
+      "options": [
+        "PROMPT",
+        "--uncommitted",
+        "--base",
+        "--commit",
+        "--title"
+      ],
+      "supportLevel": "full_app",
+      "riskLevel": "medium",
+      "requiresConfirmation": true,
+      "requiresLocalOnly": true,
+      "devlinkSurface": "Code review screen",
+      "plannedStage": 7,
+      "sources": [
+        "local:codex review --help"
+      ],
+      "notes": "Expose after core exec flow is stable."
+    },
+    {
+      "id": "resume",
+      "command": "codex resume",
+      "subcommands": [],
+      "options": [
+        "SESSION_ID",
+        "PROMPT",
+        "--last",
+        "--all",
+        "--include-non-interactive",
+        "--model",
+        "--profile",
+        "--sandbox",
+        "--ask-for-approval",
+        "--search"
+      ],
+      "supportLevel": "full_app",
+      "riskLevel": "medium",
+      "requiresConfirmation": true,
+      "requiresLocalOnly": true,
+      "devlinkSurface": "Resume interactive or stored session",
+      "plannedStage": 6,
+      "sources": [
+        "local:codex resume --help",
+        "https://developers.openai.com/codex/cli/reference"
+      ],
+      "notes": "--all can cross the current working directory boundary and needs UI clarity."
+    },
+    {
+      "id": "fork",
+      "command": "codex fork",
+      "subcommands": [],
+      "options": [
+        "SESSION_ID",
+        "PROMPT",
+        "--last",
+        "--all",
+        "--model",
+        "--profile",
+        "--sandbox",
+        "--ask-for-approval",
+        "--search"
+      ],
+      "supportLevel": "full_app",
+      "riskLevel": "medium",
+      "requiresConfirmation": true,
+      "requiresLocalOnly": true,
+      "devlinkSurface": "Fork an existing session into an alternative path",
+      "plannedStage": 6,
+      "sources": [
+        "local:codex fork --help",
+        "https://developers.openai.com/codex/cli/reference"
+      ],
+      "notes": "Requires session metadata in backend."
+    },
+    {
+      "id": "apply",
+      "command": "codex apply",
+      "subcommands": [],
+      "options": [
+        "TASK_ID"
+      ],
+      "supportLevel": "dangerous",
+      "riskLevel": "high",
+      "requiresConfirmation": true,
+      "requiresLocalOnly": true,
+      "devlinkSurface": "Apply a Codex-produced diff after preview",
+      "plannedStage": 7,
+      "sources": [
+        "local:codex apply --help"
+      ],
+      "notes": "Must require preview and explicit approval."
+    },
+    {
+      "id": "login",
+      "command": "codex login",
+      "subcommands": [
+        "status"
+      ],
+      "options": [
+        "--with-api-key",
+        "--with-access-token",
+        "--device-auth"
+      ],
+      "supportLevel": "advanced",
+      "riskLevel": "high",
+      "requiresConfirmation": true,
+      "requiresLocalOnly": true,
+      "devlinkSurface": "Local authentication status and instructions",
+      "plannedStage": 7,
+      "sources": [
+        "local:codex login --help"
+      ],
+      "notes": "Only login status is low risk. Credential entry should stay local."
+    },
+    {
+      "id": "logout",
+      "command": "codex logout",
+      "subcommands": [],
+      "options": [],
+      "supportLevel": "dangerous",
+      "riskLevel": "high",
+      "requiresConfirmation": true,
+      "requiresLocalOnly": true,
+      "devlinkSurface": "Disconnect local Codex credentials",
+      "plannedStage": 7,
+      "sources": [
+        "local:codex logout --help"
+      ],
+      "notes": "Can break future DevLink runs on the computer."
+    },
+    {
+      "id": "mcp",
+      "command": "codex mcp",
+      "subcommands": [
+        "list",
+        "get",
+        "add",
+        "remove",
+        "login",
+        "logout"
+      ],
+      "options": [
+        "--json",
+        "--env",
+        "--url",
+        "--bearer-token-env-var"
+      ],
+      "supportLevel": "advanced",
+      "riskLevel": "high",
+      "requiresConfirmation": true,
+      "requiresLocalOnly": true,
+      "devlinkSurface": "MCP server management",
+      "plannedStage": 8,
+      "sources": [
+        "local:codex mcp --help",
+        "local:codex mcp add --help",
+        "https://developers.openai.com/codex/mcp"
+      ],
+      "notes": "list/get can be read-only; add/remove/login/logout need confirmation."
+    },
+    {
+      "id": "plugin",
+      "command": "codex plugin",
+      "subcommands": [
+        "marketplace add",
+        "marketplace upgrade",
+        "marketplace remove"
+      ],
+      "options": [
+        "--ref",
+        "--sparse"
+      ],
+      "supportLevel": "advanced",
+      "riskLevel": "high",
+      "requiresConfirmation": true,
+      "requiresLocalOnly": true,
+      "devlinkSurface": "Plugin marketplace management",
+      "plannedStage": 8,
+      "sources": [
+        "local:codex plugin --help",
+        "local:codex plugin marketplace --help",
+        "https://developers.openai.com/codex/cli/reference"
+      ],
+      "notes": "Changes local plugin marketplace configuration."
+    },
+    {
+      "id": "features",
+      "command": "codex features",
+      "subcommands": [
+        "list",
+        "enable",
+        "disable"
+      ],
+      "options": [],
+      "supportLevel": "advanced",
+      "riskLevel": "high",
+      "requiresConfirmation": true,
+      "requiresLocalOnly": true,
+      "devlinkSurface": "Feature flag diagnostics and advanced changes",
+      "plannedStage": 7,
+      "sources": [
+        "local:codex features --help"
+      ],
+      "notes": "list is low risk; enable/disable writes config and needs confirmation."
+    },
+    {
+      "id": "debug",
+      "command": "codex debug",
+      "subcommands": [
+        "models",
+        "app-server",
+        "prompt-input"
+      ],
+      "options": [],
+      "supportLevel": "advanced",
+      "riskLevel": "medium",
+      "requiresConfirmation": true,
+      "requiresLocalOnly": true,
+      "devlinkSurface": "Local diagnostics",
+      "plannedStage": 7,
+      "sources": [
+        "local:codex debug --help"
+      ],
+      "notes": "Do not send secrets or full prompt-input diagnostics to backend without filtering."
+    },
+    {
+      "id": "completion",
+      "command": "codex completion",
+      "subcommands": [],
+      "options": [
+        "bash",
+        "elvish",
+        "fish",
+        "powershell",
+        "zsh"
+      ],
+      "supportLevel": "full_app",
+      "riskLevel": "low",
+      "requiresConfirmation": false,
+      "requiresLocalOnly": true,
+      "devlinkSurface": "Setup instructions for shell completion",
+      "plannedStage": 7,
+      "sources": [
+        "local:codex completion --help"
+      ],
+      "notes": "Likely displayed as instructions rather than executed from mobile."
+    },
+    {
+      "id": "update",
+      "command": "codex update",
+      "subcommands": [],
+      "options": [],
+      "supportLevel": "dangerous",
+      "riskLevel": "high",
+      "requiresConfirmation": true,
+      "requiresLocalOnly": true,
+      "devlinkSurface": "Update local Codex CLI",
+      "plannedStage": 7,
+      "sources": [
+        "local:codex --help"
+      ],
+      "notes": "Can change behavior of the audited CLI. Re-run Stage 2 audit after update."
+    },
+    {
+      "id": "sandbox",
+      "command": "codex sandbox",
+      "subcommands": [
+        "macos",
+        "linux",
+        "windows"
+      ],
+      "options": [
+        "COMMAND",
+        "--permissions-profile",
+        "--cd",
+        "--include-managed-config"
+      ],
+      "supportLevel": "dangerous",
+      "riskLevel": "high",
+      "requiresConfirmation": true,
+      "requiresLocalOnly": true,
+      "devlinkSurface": "Advanced sandbox command runner",
+      "plannedStage": 7,
+      "sources": [
+        "local:codex sandbox --help",
+        "local:codex sandbox windows --help",
+        "https://developers.openai.com/codex/cli/reference"
+      ],
+      "notes": "Requires command allowlists or explicit approval."
+    },
+    {
+      "id": "mcp-server",
+      "command": "codex mcp-server",
+      "subcommands": [],
+      "options": [],
+      "supportLevel": "experimental",
+      "riskLevel": "critical",
+      "requiresConfirmation": true,
+      "requiresLocalOnly": true,
+      "devlinkSurface": "Experimental local MCP server mode",
+      "plannedStage": 11,
+      "sources": [
+        "local:codex mcp-server --help",
+        "https://developers.openai.com/codex/cli/reference"
+      ],
+      "notes": "Not part of MVP."
+    },
+    {
+      "id": "app-server",
+      "command": "codex app-server",
+      "subcommands": [
+        "proxy",
+        "generate-ts",
+        "generate-json-schema"
+      ],
+      "options": [
+        "--listen",
+        "--analytics-default-enabled",
+        "--ws-auth",
+        "--ws-token-file",
+        "--ws-token-sha256",
+        "--ws-shared-secret-file",
+        "--ws-issuer",
+        "--ws-audience",
+        "--ws-max-clock-skew-seconds"
+      ],
+      "supportLevel": "experimental",
+      "riskLevel": "critical",
+      "requiresConfirmation": true,
+      "requiresLocalOnly": true,
+      "devlinkSurface": "Experimental app server tooling",
+      "plannedStage": 11,
+      "sources": [
+        "local:codex app-server --help",
+        "https://developers.openai.com/codex/cli/reference"
+      ],
+      "notes": "Can expose websocket/listener endpoints. Keep hidden until security design exists."
+    },
+    {
+      "id": "remote-control",
+      "command": "codex remote-control",
+      "subcommands": [],
+      "options": [],
+      "supportLevel": "experimental",
+      "riskLevel": "critical",
+      "requiresConfirmation": true,
+      "requiresLocalOnly": true,
+      "devlinkSurface": "Not exposed in MVP",
+      "plannedStage": 11,
+      "sources": [
+        "local:codex remote-control --help"
+      ],
+      "notes": "Starts headless app-server with remote control enabled."
+    },
+    {
+      "id": "exec-server",
+      "command": "codex exec-server",
+      "subcommands": [],
+      "options": [
+        "--listen",
+        "--remote",
+        "--executor-id",
+        "--name"
+      ],
+      "supportLevel": "experimental",
+      "riskLevel": "critical",
+      "requiresConfirmation": true,
+      "requiresLocalOnly": true,
+      "devlinkSurface": "Not exposed in MVP",
+      "plannedStage": 11,
+      "sources": [
+        "local:codex exec-server --help"
+      ],
+      "notes": "Standalone executor service needs separate threat model."
+    },
+    {
+      "id": "cloud",
+      "command": "codex cloud",
+      "subcommands": [
+        "exec",
+        "status",
+        "list",
+        "apply",
+        "diff"
+      ],
+      "options": [
+        "--env",
+        "--attempts",
+        "--branch",
+        "--attempt"
+      ],
+      "supportLevel": "experimental",
+      "riskLevel": "critical",
+      "requiresConfirmation": true,
+      "requiresLocalOnly": false,
+      "devlinkSurface": "Future Codex Cloud integration",
+      "plannedStage": 11,
+      "sources": [
+        "local:codex cloud --help",
+        "local:codex cloud exec --help",
+        "local:codex cloud apply --help"
+      ],
+      "notes": "Not part of local-only MVP because work can happen in Codex Cloud."
+    },
+    {
+      "id": "app",
+      "command": "codex app",
+      "subcommands": [],
+      "options": [],
+      "supportLevel": "advanced",
+      "riskLevel": "medium",
+      "requiresConfirmation": true,
+      "requiresLocalOnly": true,
+      "devlinkSurface": "Optional local shortcut to desktop app",
+      "plannedStage": 11,
+      "sources": [
+        "local:codex --help"
+      ],
+      "notes": "May open/install desktop app locally."
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "devlink-cli"
+version = "0.1.0"
+description = "Local bridge between DevLink backend and Codex CLI"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "httpx>=0.27,<1.0",
+  "pydantic>=2.7,<3.0",
+  "typer>=0.12,<1.0",
+  "platformdirs>=4.2,<5.0",
+  "keyring>=25.2,<26.0",
+  "pywinpty>=2,<3; platform_system == 'Windows'",
+]
+
+[project.scripts]
+devlink = "devlink_cli.main:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["devlink_cli"]
