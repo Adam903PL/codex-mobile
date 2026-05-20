@@ -1,0 +1,74 @@
+@startuml
+title DevLink - Adapter (wzorzec strukturalny)
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+class "CLI Daemon" as Daemon {
+  +run_task(client, task_payload)
+}
+
+interface AgentAdapter {
+  +run(task: AgentTask): AsyncIterator<AgentEvent>
+}
+
+class CodexAdapter {
+  -stdout_lines: list
+  -stderr_lines: list
+  -assistant_messages: list
+  -edited_files: list
+  +run(task: AgentTask): AsyncIterator<AgentEvent>
+}
+
+class ShellAdapter {
+  +run(task: AgentTask): AsyncIterator<AgentEvent>
+}
+
+class AgentTask {
+  +id: str
+  +prompt: str
+  +project_path: str
+  +model: str
+  +approval_policy: str
+}
+
+class AgentEvent {
+  +event_type: str
+  +message: str
+  +payload: dict
+}
+
+class "Codex CLI process" as CodexProcess {
+  +codex exec --json
+  +stdout
+  +stderr
+  +exit_code
+}
+
+class "Backend API" as BackendApi {
+  +POST /api/cli/tasks/{id}/events/
+  +PATCH /api/cli/tasks/{id}/
+}
+
+Daemon --> AgentAdapter : uses common contract
+Daemon --> BackendApi : sends AgentEvent
+
+CodexAdapter ..|> AgentAdapter
+ShellAdapter ..|> AgentAdapter
+
+CodexAdapter --> CodexProcess : adapts external output
+CodexAdapter --> AgentEvent : emits normalized events
+ShellAdapter --> AgentEvent : emits normalized events
+
+AgentAdapter --> AgentTask : consumes
+AgentAdapter --> AgentEvent : produces
+
+note right of CodexAdapter
+Adapter zamienia stdout/stderr
+i JSON stream z Codex CLI
+na wspolny format AgentEvent.
+end note
+
+@enduml
+

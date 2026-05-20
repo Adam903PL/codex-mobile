@@ -1,0 +1,62 @@
+@startuml
+title DevLink - Factory Method (wzorzec kreacyjny)
+
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam packageStyle rectangle
+
+class "CLI Daemon" as Daemon {
+  +run_task(client, task_payload)
+}
+
+class AgentFactory {
+  +create(agent_type: str): AgentAdapter
+}
+
+interface AgentAdapter {
+  +run(task: AgentTask): AsyncIterator<AgentEvent>
+}
+
+class CodexAdapter {
+  +run(task: AgentTask): AsyncIterator<AgentEvent>
+}
+
+class ShellAdapter {
+  +run(task: AgentTask): AsyncIterator<AgentEvent>
+}
+
+class AgentTask {
+  +id: str
+  +prompt: str
+  +project_path: str
+  +agent_type: str
+}
+
+class AgentEvent {
+  +event_type: str
+  +message: str
+  +payload: dict
+}
+
+Daemon --> AgentFactory : create(task.agent_type)
+Daemon --> AgentAdapter : adapter.run(task)
+Daemon --> AgentTask : builds
+
+AgentFactory ..> CodexAdapter : creates when "codex"
+AgentFactory ..> ShellAdapter : creates when "shell"
+AgentFactory ..> AgentAdapter : returns
+
+CodexAdapter ..|> AgentAdapter
+ShellAdapter ..|> AgentAdapter
+
+AgentAdapter --> AgentTask : consumes
+AgentAdapter --> AgentEvent : emits
+
+note right of AgentFactory
+Factory Method ukrywa decyzje,
+ktora konkretna klasa agenta
+ma zostac utworzona.
+end note
+
+@enduml
+

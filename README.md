@@ -93,6 +93,21 @@ devlink connect
 
 W MVP działa `CodexAdapter` oraz testowy `ShellAdapter`. `ClaudeAdapter` jest jedynie planem rozbudowy architektury, nie elementem MVP.
 
+### Z1 - historyjki użytkownika
+
+- [Parowanie CLI z aplikacją](historyjki/parowanie_cli.md)
+- [Wysyłanie promptu do workspace](historyjki/chat_workspace.md)
+- [Terminal projektu w aplikacji mobilnej](historyjki/terminal_workspace.md)
+
+### Z2 - wzorce projektowe
+
+- [Factory Method - opis i uzasadnienie](docs/patterns/factory-method/README.md)
+- [Factory Method - diagram PUML](docs/patterns/factory-method/factory-method.puml)
+- [Factory Method - diagram SVG](docs/patterns/factory-method/factory-method.svg)
+- [Adapter - opis i uzasadnienie](docs/patterns/adapter/README.md)
+- [Adapter - diagram PUML](docs/patterns/adapter/adapter.puml)
+- [Adapter - diagram SVG](docs/patterns/adapter/adapter.svg)
+
 ## Dokumentacja
 
 - [Architektura](docs/architecture.md)

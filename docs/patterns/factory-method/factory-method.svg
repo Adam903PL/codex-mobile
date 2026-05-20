@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="720" viewBox="0 0 1120 720">
+  <style>
+    .bg { fill: #ffffff; }
+    .box { fill: #f8fafc; stroke: #1f2937; stroke-width: 2; rx: 8; }
+    .head { fill: #e5e7eb; stroke: #1f2937; stroke-width: 2; }
+    .text { font-family: Arial, sans-serif; font-size: 18px; fill: #111827; }
+    .small { font-family: Arial, sans-serif; font-size: 15px; fill: #374151; }
+    .title { font-family: Arial, sans-serif; font-size: 28px; font-weight: 700; fill: #111827; }
+    .arrow { stroke: #111827; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
+    .dash { stroke: #111827; stroke-width: 2.5; fill: none; stroke-dasharray: 8 6; marker-end: url(#arrow); }
+    .note { fill: #fff7ed; stroke: #f97316; stroke-width: 2; rx: 8; }
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#111827"/>
+    </marker>
+  </defs>
+  <rect class="bg" width="1120" height="720"/>
+  <text x="40" y="50" class="title">DevLink - Factory Method</text>
+
+  <rect x="70" y="110" width="230" height="115" class="box"/>
+  <rect x="70" y="110" width="230" height="38" class="head"/>
+  <text x="92" y="136" class="text">CLI Daemon</text>
+  <text x="92" y="176" class="small">+ run_task(...)</text>
+  <text x="92" y="200" class="small">+ polls backend task</text>
+
+  <rect x="430" y="105" width="260" height="135" class="box"/>
+  <rect x="430" y="105" width="260" height="38" class="head"/>
+  <text x="452" y="131" class="text">AgentFactory</text>
+  <text x="452" y="174" class="small">+ create(agent_type)</text>
+  <text x="452" y="198" class="small">returns AgentAdapter</text>
+
+  <rect x="805" y="105" width="245" height="135" class="box"/>
+  <rect x="805" y="105" width="245" height="38" class="head"/>
+  <text x="827" y="131" class="text">&lt;&lt;interface&gt;&gt;</text>
+  <text x="827" y="158" class="text">AgentAdapter</text>
+  <text x="827" y="200" class="small">+ run(task)</text>
+
+  <rect x="160" y="390" width="230" height="120" class="box"/>
+  <rect x="160" y="390" width="230" height="38" class="head"/>
+  <text x="182" y="416" class="text">CodexAdapter</text>
+  <text x="182" y="460" class="small">+ run(task)</text>
+  <text x="182" y="484" class="small">executes Codex CLI</text>
+
+  <rect x="470" y="390" width="230" height="120" class="box"/>
+  <rect x="470" y="390" width="230" height="38" class="head"/>
+  <text x="492" y="416" class="text">ShellAdapter</text>
+  <text x="492" y="460" class="small">+ run(task)</text>
+  <text x="492" y="484" class="small">test/simple agent</text>
+
+  <rect x="790" y="390" width="250" height="135" class="box"/>
+  <rect x="790" y="390" width="250" height="38" class="head"/>
+  <text x="812" y="416" class="text">AgentTask</text>
+  <text x="812" y="456" class="small">+ id</text>
+  <text x="812" y="480" class="small">+ prompt</text>
+  <text x="812" y="504" class="small">+ agent_type</text>
+
+  <rect x="70" y="575" width="315" height="85" class="note"/>
+  <text x="92" y="608" class="small">Factory wybiera konkretna klase</text>
+  <text x="92" y="632" class="small">adaptera po wartosci agent_type.</text>
+
+  <path d="M300 168 L430 168" class="arrow"/>
+  <text x="318" y="154" class="small">create(task.agent_type)</text>
+
+  <path d="M690 168 L805 168" class="dash"/>
+  <text x="708" y="154" class="small">returns</text>
+
+  <path d="M500 240 L320 390" class="dash"/>
+  <text x="310" y="320" class="small">creates codex</text>
+
+  <path d="M590 240 L590 390" class="dash"/>
+  <text x="604" y="320" class="small">creates shell</text>
+
+  <path d="M390 430 L805 210" class="dash"/>
+  <path d="M700 430 L880 240" class="dash"/>
+  <text x="750" y="333" class="small">implements</text>
+
+  <path d="M185 225 L185 390" class="arrow"/>
+  <text x="198" y="310" class="small">uses adapter.run()</text>
+
+  <path d="M300 190 L790 445" class="arrow"/>
+  <text x="470" y="330" class="small">builds AgentTask</text>
+</svg>
+
