@@ -79,8 +79,8 @@ class TaskCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Nie masz dostepu do tego projektu.")
         if not project.is_active:
             raise serializers.ValidationError("Projekt jest nieaktywny.")
-        if project.device.status == "revoked":
-            raise serializers.ValidationError("Urzadzenie projektu zostalo odlaczone.")
+        if not project.device.is_available_for_tasks():
+            raise serializers.ValidationError("Urzadzenie projektu nie jest polaczone. Uruchom devlink connect albo wybierz aktywny workspace.")
         return project
 
     def validate(self, attrs):

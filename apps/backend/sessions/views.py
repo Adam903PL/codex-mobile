@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from itertools import chain
 
-from django.db.models import Count, Prefetch, Q
+from django.db.models import Case, Count, IntegerField, Prefetch, Q, When
 from django.utils import timezone
 from rest_framework import generics, status
 from rest_framework.exceptions import ValidationError
@@ -10,7 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from devices.models import Device
+from devices.models import ACTIVE_HEARTBEAT_GRACE, Device
 from devices.serializers import DeviceSerializer
 from agents.models import ApprovalRequest
 from agents.serializers import ApprovalRequestSerializer
@@ -38,17 +38,51 @@ from .services import (
     touch_session,
 )
 
+ACTIVE_DEVICE_STATUSES = [Device.Status.ONLINE, Device.Status.BUSY]
+
+
+def active_device_ordering(fresh_since) -> Case:
+    return Case(
+        When(status__in=ACTIVE_DEVICE_STATUSES, last_seen_at__gte=fresh_since, then=0),
+        default=1,
+        output_field=IntegerField(),
+    )
+
+
+def active_project_device_ordering(fresh_since) -> Case:
+    return Case(
+        When(device__status__in=ACTIVE_DEVICE_STATUSES, device__last_seen_at__gte=fresh_since, then=0),
+        default=1,
+        output_field=IntegerField(),
+    )
+
 
 class WorkspaceBootstrapView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        devices = Device.objects.filter(owner=request.user).annotate(project_count=Count("projects"))
-        projects = Project.objects.select_related("device").filter(owner=request.user, is_active=True)
+        fresh_since = timezone.now() - ACTIVE_HEARTBEAT_GRACE
+        devices = (
+            Device.objects.filter(owner=request.user)
+            .annotate(project_count=Count("projects"), active_rank=active_device_ordering(fresh_since))
+            .order_by("active_rank", "-last_seen_at", "-updated_at")
+        )
+        projects = (
+            Project.objects.select_related("device")
+            .filter(owner=request.user, is_active=True)
+            .annotate(active_rank=active_project_device_ordering(fresh_since))
+            .order_by("active_rank", "-updated_at", "name")
+        )
         latest_session = (
             AgentSession.objects.select_related("device", "project", "parent_session")
             .annotate(task_count=Count("tasks"))
-            .filter(owner=request.user, status=AgentSession.Status.OPEN)
+            .filter(
+                owner=request.user,
+                status=AgentSession.Status.OPEN,
+                project__is_active=True,
+                device__status__in=ACTIVE_DEVICE_STATUSES,
+                device__last_seen_at__gte=fresh_since,
+            )
             .order_by("-last_activity_at", "-created_at")
             .first()
         )
@@ -383,8 +417,8 @@ class SessionMessageCreateView(APIView):
             raise ValidationError({"session": ["Sesja jest zamknieta."]})
         if not session.project.is_active:
             raise ValidationError({"project": ["Projekt jest nieaktywny."]})
-        if session.device.status == "revoked":
-            raise ValidationError({"device": ["Urzadzenie projektu zostalo odlaczone."]})
+        if not session.device.is_available_for_tasks():
+            raise ValidationError({"device": ["Urzadzenie projektu nie jest polaczone. Uruchom devlink connect albo wybierz aktywny workspace."]})
 
         serializer = SessionMessageCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

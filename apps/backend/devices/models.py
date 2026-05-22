@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import uuid
+from datetime import timedelta
 
 from django.conf import settings
 from django.db import models
@@ -10,6 +11,9 @@ from django.utils import timezone
 
 def hash_device_token(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+ACTIVE_HEARTBEAT_GRACE = timedelta(minutes=2)
 
 
 class Device(models.Model):
@@ -38,6 +42,11 @@ class Device(models.Model):
         self.status = status
         self.last_seen_at = timezone.now()
         self.save(update_fields=["status", "last_seen_at", "updated_at"])
+
+    def is_available_for_tasks(self) -> bool:
+        if self.status not in {self.Status.ONLINE, self.Status.BUSY} or not self.last_seen_at:
+            return False
+        return self.last_seen_at >= timezone.now() - ACTIVE_HEARTBEAT_GRACE
 
     def __str__(self) -> str:
         return f"{self.name} ({self.owner})"

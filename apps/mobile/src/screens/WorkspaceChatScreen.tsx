@@ -93,6 +93,7 @@ type Props = NativeStackScreenProps<AppStackParamList, "WorkspaceChat">;
 
 const ACTIVE_TASK_STATUSES = new Set(["queued", "claimed", "running"]);
 const TERMINAL_TASK_STATUSES = new Set(["succeeded", "failed", "timed_out", "canceled"]);
+const CONNECTED_DEVICE_STATUSES = new Set(["online", "busy"]);
 const { width: SW, height: SH } = Dimensions.get("window");
 const LONG_FINAL_CHAR = 1800;
 const LONG_FINAL_LINES = 14;
@@ -123,6 +124,30 @@ const C = {
 type TimelineEntry =
   | { type: "item"; id: string; item: TimelineItem }
   | { type: "run_log"; id: string; taskId: string; items: TimelineItem[]; completed: boolean; hasAssistantMessage: boolean };
+
+function isConnectedDeviceStatus(status?: string | null) {
+  return CONNECTED_DEVICE_STATUSES.has(String(status || "").toLowerCase());
+}
+
+function projectDeviceStatus(project: Project | null | undefined, devices: Device[]) {
+  const device = devices.find((item) => item.id === project?.device);
+  return device?.status || project?.device_status || "";
+}
+
+function projectHasConnectedDevice(project: Project | null | undefined, devices: Device[]) {
+  return Boolean(project && project.is_active && isConnectedDeviceStatus(projectDeviceStatus(project, devices)));
+}
+
+function choosePreferredProject(projects: Project[], devices: Device[]) {
+  return projects.find((project) => projectHasConnectedDevice(project, devices)) || projects[0] || null;
+}
+
+function canReuseSession(session: AgentSession | null, selectedProjectId: string, projects: Project[], devices: Device[]) {
+  if (!session || session.status === "closed") return false;
+  if (selectedProjectId && session.project !== selectedProjectId) return false;
+  const project = projects.find((item) => item.id === session.project);
+  return projectHasConnectedDevice(project, devices) || isConnectedDeviceStatus(session.device_status);
+}
 
 type LimitUsage = {
   label: string;
@@ -219,7 +244,7 @@ export function WorkspaceChatScreen({ navigation, route }: Props) {
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   const activeProject = useMemo(
-    () => projects.find((project) => project.id === (session?.project || selectedProjectId)) || null,
+    () => projects.find((project) => project.id === (selectedProjectId || session?.project)) || null,
     [projects, selectedProjectId, session?.project]
   );
   const activeDevice = useMemo(
@@ -368,10 +393,15 @@ export function WorkspaceChatScreen({ navigation, route }: Props) {
       setWorkspaceAccount(payload.account || null);
       setDevices(payload.devices);
       setProjects(payload.projects);
-      const nextSession = preferences.startBehavior === "new-chat" ? null : payload.latest_session;
+      const preferredProject = choosePreferredProject(payload.projects, payload.devices);
+      const bootstrapProjectId = payload.latest_session?.project || preferredProject?.id || "";
+      const nextSession =
+        preferences.startBehavior === "new-chat" || !canReuseSession(payload.latest_session, bootstrapProjectId, payload.projects, payload.devices)
+          ? null
+          : payload.latest_session;
       setPendingApprovals(payload.pending_approvals || []);
       setSession(nextSession);
-      setSelectedProjectId(nextSession?.project || payload.projects[0]?.id || "");
+      setSelectedProjectId(nextSession?.project || preferredProject?.id || "");
       if (nextSession) {
         setModelDraft(nextSession.model || "");
         setProfileDraft(nextSession.profile || "");
@@ -388,8 +418,8 @@ export function WorkspaceChatScreen({ navigation, route }: Props) {
         lastSequenceRef.current = 0;
         mergeTimeline(await fetchSessionTimeline(accessToken, nextSession.id));
         await loadCapabilities(nextSession.device);
-      } else if (payload.projects[0]) {
-        await loadCapabilities(payload.projects[0].device);
+      } else if (preferredProject) {
+        await loadCapabilities(preferredProject.device);
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to load workspace.";
@@ -560,14 +590,21 @@ export function WorkspaceChatScreen({ navigation, route }: Props) {
 
   async function ensureSession() {
     if (!accessToken) return null;
-    if (session && session.status !== "closed") return session;
-    const projectId = selectedProjectId || projects[0]?.id;
+    if (canReuseSession(session, selectedProjectId, projects, devices)) return session;
+    const preferredProject = choosePreferredProject(projects, devices);
+    const projectId = selectedProjectId || preferredProject?.id;
     if (!projectId) {
       setSettingsSection("devices");
       setSettingsOpen(true);
       throw new Error("No project selected.");
     }
     const project = projects.find((item) => item.id === projectId);
+    if (!projectHasConnectedDevice(project, devices)) {
+      setSession(null);
+      setSettingsSection("devices");
+      setSettingsOpen(true);
+      throw new Error("Urzadzenie projektu nie jest polaczone. Uruchom devlink connect albo wybierz aktywny workspace.");
+    }
     const nextSession = await createSession(accessToken, projectId, project?.name || "DevLink chat", {
       model: modelDraft,
       profile: profileDraft,
@@ -706,6 +743,14 @@ export function WorkspaceChatScreen({ navigation, route }: Props) {
     setError("");
     const project = projects.find((item) => item.id === projectId);
     setSelectedProjectId(projectId);
+    if (!projectHasConnectedDevice(project, devices)) {
+      setSession(null);
+      setTimeline([]);
+      setSettingsSection("devices");
+      setSettingsOpen(true);
+      setError("Urzadzenie projektu nie jest polaczone. Uruchom devlink connect albo wybierz aktywny workspace.");
+      return;
+    }
     const nextCapabilities = project ? await loadCapabilities(project.device) : capabilities;
     const branch = nextCapabilities.project_git?.[projectId]?.branch || "";
     setBranchDraft(branch);

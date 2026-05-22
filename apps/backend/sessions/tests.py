@@ -1,6 +1,10 @@
+from datetime import timedelta
+
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 from rest_framework.test import APITestCase
 
+from devices.models import Device
 from sessions.models import AgentSession, SessionMessage
 from agents.models import ApprovalRequest
 from tasks.models import Task, TaskEvent
@@ -83,6 +87,24 @@ class AgentSessionApiTests(APITestCase):
         self.assertEqual(response.data["devices"][0]["owner_username"], "bootstrap_context")
         self.assertEqual(response.data["projects"][0]["owner_username"], "bootstrap_context")
         self.assertEqual(response.data["projects"][0]["id"], paired["project"]["id"])
+
+    def test_workspace_bootstrap_prefers_connected_project_over_offline_latest_session(self):
+        user = self.create_user("bootstrap_connected_project")
+        old_pair = self.pair_device(user, "Old Laptop")
+        old_session = self.create_session(user, old_pair["project"]["id"], title="Old chat")
+        Device.objects.filter(pk=old_pair["device_id"]).update(
+            status=Device.Status.ONLINE,
+            last_seen_at=timezone.now() - timedelta(minutes=10),
+        )
+        AgentSession.objects.filter(pk=old_session["id"]).update(last_activity_at=timezone.now())
+        new_pair = self.pair_device(user, "Current Laptop")
+
+        self.client.force_authenticate(user=user)
+        response = self.client.get("/api/workspace/bootstrap/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(response.data["latest_session"])
+        self.assertEqual(response.data["projects"][0]["id"], new_pair["project"]["id"])
 
     def test_closed_session_blocks_new_tasks(self):
         user = self.create_user("closed_session_user")
@@ -236,6 +258,41 @@ class AgentSessionApiTests(APITestCase):
         self.assertEqual(saved_session.selected_skills, ["react-patterns"])
         self.assertEqual(SessionMessage.objects.filter(session=saved_session, role="user").count(), 1)
         self.assertEqual(Task.objects.filter(session=saved_session).count(), 1)
+
+    def test_session_message_endpoint_rejects_offline_device(self):
+        user = self.create_user("offline_chat_user")
+        paired = self.pair_device(user)
+        session = self.create_session(user, paired["project"]["id"])
+        Device.objects.filter(pk=paired["device_id"]).update(status=Device.Status.OFFLINE)
+
+        response = self.client.post(
+            f"/api/sessions/{session['id']}/messages/",
+            {"content": "ping"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("device", response.data["details"])
+        self.assertEqual(Task.objects.filter(session_id=session["id"]).count(), 0)
+
+    def test_session_message_endpoint_rejects_stale_online_device(self):
+        user = self.create_user("stale_chat_user")
+        paired = self.pair_device(user)
+        session = self.create_session(user, paired["project"]["id"])
+        Device.objects.filter(pk=paired["device_id"]).update(
+            status=Device.Status.ONLINE,
+            last_seen_at=timezone.now() - timedelta(minutes=10),
+        )
+
+        response = self.client.post(
+            f"/api/sessions/{session['id']}/messages/",
+            {"content": "ping"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("device", response.data["details"])
+        self.assertEqual(Task.objects.filter(session_id=session["id"]).count(), 0)
 
     def test_emergency_stop_cancels_active_tasks_and_kills_terminal(self):
         user = self.create_user("emergency_stop_user")
