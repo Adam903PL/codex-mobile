@@ -178,7 +178,7 @@ export function LoginScreen() {
                       setApiDraft(value);
                       setApiStatus("");
                     }}
-                    placeholder="192.168.0.238 albo http://192.168.0.238:8000/api"
+                    placeholder="192.168.0.9 albo http://192.168.0.9:8000/api"
                     placeholderTextColor={THEME.placeholder}
                     autoCapitalize="none"
                     autoCorrect={false}

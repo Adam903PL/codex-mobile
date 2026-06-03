@@ -24,7 +24,15 @@ load_local_env()
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "devlink-dev-secret-key-change-me-for-local-development")
 DEBUG = os.getenv("DJANGO_DEBUG", "1") == "1"
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,testserver").split(",")
+
+
+def csv_env(name: str, default: str) -> list[str]:
+    return [item.strip() for item in os.getenv(name, default).split(",") if item.strip()]
+
+
+ALLOWED_HOSTS = csv_env("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,testserver")
+if DEBUG and "DJANGO_ALLOWED_HOSTS" not in os.environ:
+    ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
     "daphne",
@@ -113,11 +121,8 @@ USE_TZ = True
 STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-CORS_ALLOWED_ORIGINS = [
-    origin
-    for origin in os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:8081").split(",")
-    if origin
-]
+CORS_ALLOWED_ORIGINS = csv_env("CORS_ALLOWED_ORIGINS", "http://localhost:8081")
+CORS_ALLOW_ALL_ORIGINS = DEBUG and "CORS_ALLOWED_ORIGINS" not in os.environ
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
@@ -149,7 +154,7 @@ SPECTACULAR_SETTINGS = {
 
 DEFAULT_CHANNEL_LAYER_BACKEND = (
     "channels.layers.InMemoryChannelLayer"
-    if "test" in sys.argv
+    if DEBUG or "test" in sys.argv
     else "channels_redis.core.RedisChannelLayer"
 )
 

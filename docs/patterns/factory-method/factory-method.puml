@@ -5,37 +5,39 @@ skinparam classAttributeIconSize 0
 skinparam shadowing false
 skinparam packageStyle rectangle
 
-class "CLI Daemon" as Daemon {
-  +run_task(client, task_payload)
+class "CLI Daemon" as Daemon <<service>> {
+  +run_task(client: DevLinkApiClient, task_payload: dict[str, Any]): None
 }
 
-class AgentFactory {
+class AgentFactory <<factory>> {
   +create(agent_type: str): AgentAdapter
 }
 
-interface AgentAdapter {
+interface AgentAdapter <<interface>> {
   +run(task: AgentTask): AsyncIterator<AgentEvent>
 }
 
-class CodexAdapter {
+class CodexAdapter <<adapter>> {
   +run(task: AgentTask): AsyncIterator<AgentEvent>
 }
 
-class ShellAdapter {
+class ShellAdapter <<adapter>> {
   +run(task: AgentTask): AsyncIterator<AgentEvent>
 }
 
-class AgentTask {
+class AgentTask <<dataclass>> {
   +id: str
   +prompt: str
   +project_path: str
   +agent_type: str
+  +model: str
+  +tool_settings: dict[str, Any]
 }
 
-class AgentEvent {
+class AgentEvent <<dataclass>> {
   +event_type: str
   +message: str
-  +payload: dict
+  +payload: dict[str, Any]
 }
 
 Daemon --> AgentFactory : create(task.agent_type)
@@ -58,5 +60,12 @@ ktora konkretna klasa agenta
 ma zostac utworzona.
 end note
 
-@enduml
+legend right
+  <<service>> logika orkiestracji
+  <<factory>> tworzy adapter
+  <<interface>> wspolny kontrakt
+  <<adapter>> konkretna implementacja
+  <<dataclass>> obiekt danych
+endlegend
 
+@enduml

@@ -1,6 +1,6 @@
 # Codex Chat Workspace
 
-Etap 7 zmienia glowny sposob korzystania z DevLink. Uzytkownik nie tworzy juz recznie "taskow" w normalnym flow. Task zostaje technicznym runem agenta, a aplikacja mobilna pokazuje jedna rozmowe z lokalnym Codexem.
+Etap 7 zmienia glowny sposob korzystania z DevLink. Uzytkownik nie tworzy juz recznie "taskow" w normalnym flow. Task zostaje technicznym runem agenta, a aplikacja mobilna pokazuje jedna rozmowe z lokalnym Codexm.
 
 ## Model UX
 
@@ -11,7 +11,7 @@ Glowny ekran mobile to `WorkspaceChatScreen`:
 - composer wysyla zwykla wiadomosc do sesji,
 - panel ustawien pozwala wybrac projekt, model, profil, sandbox/access, web search i skillsy.
 
-Stare ekrany taskow i historii zostaja jako kompatybilne zaplecze, ale nie sa juz centrum aplikacji.
+Stare ekrany taskow i historii zostaja jako kompatybilne zaplecze, ale nie sa juz centurm aplikacji.
 
 ## Backend
 
@@ -47,7 +47,7 @@ CLI synchronizuje capabilities komputera:
 - surowy output `codex features list`,
 - lokalne skillsy wykryte po plikach `SKILL.md`.
 
-Skills w Etapie 7 sa selektorem/hintem. Mobile wybiera skill id, backend zapisuje je na sesji, a CLI dopina nazwy i opisy wybranych skillsow do promptu jako jawny kontekst. DevLink nie instaluje i nie usuwa skillsow z telefonu w tym etapie.
+Skills w Etapie 7 sa selektorem/hintem. Mobile wybiera skill id, backend zapisuje je na sesji, a CLI dopina nazwy i opisy wybranych skillsow do promptu jako jawny konteks. DevLink nie instaluje i nie usuwa skillsow z telefonu w tym etapie.
 
 ## Bezpieczenstwo
 

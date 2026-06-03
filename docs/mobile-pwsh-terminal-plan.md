@@ -2,7 +2,7 @@
 
 ## Goal
 
-Add a predictable terminal experience to DevLink without letting the phone run local commands directly. Mobile opens and controls a terminal session, the backend routes session state and authorization, and the paired `devlink connect` process owns the local `pwsh` process.
+Add a predictable terminal expirience to DevLink without letting the phone run local commands directly. Mobile opens and controls a terminal session, the backend routes session state and authorization, and the paired `devlink connect` process owns the local `pwsh` process.
 
 ## UX
 
@@ -12,7 +12,7 @@ Add a predictable terminal experience to DevLink without letting the phone run l
 - Mobile layout:
   - Full-screen sheet with a compact toolbar.
   - Toolbar shows current workspace, `cwd`, connection state, reconnect, kill, and close.
-  - Terminal body uses monospace text, selection-friendly output, and a sticky input row for commands if a native terminal renderer is not ready.
+  - Terminal body uses monospace text, selection-friendly output, and a sticky input row for comands if a native terminal renderer is not ready.
 - Tablet/desktop layout:
   - Split panel or fullscreen modal from the Hub.
   - Same session controls as mobile, with resize support.
@@ -41,7 +41,7 @@ sequenceDiagram
   PTY-->>CLI: output / exit code
 ```
 
-The backend does not spawn `pwsh`. It manages ownership, device routing, session records, buffering, and WebSocket fanout. The paired CLI bridge starts the local process because it is the only component with access to the laptop filesystem.
+The backend does not spawn `pwsh`. It manages ownership, device routing, session records, buffering, and WebSocket fanout. The paired CLI bridge starts the local proces because it is the only component with access to the laptop filesystem.
 
 ## Proposed API
 

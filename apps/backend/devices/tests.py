@@ -4,8 +4,11 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework.test import APITestCase
 
-from .models import Device, PairingCode
 from agents.models import ApprovalRequest
+from projects.models import Project
+from sessions.models import AgentSession
+
+from .models import Device, PairingCode
 
 
 class DevicePairingSecurityTests(APITestCase):
@@ -179,6 +182,43 @@ class DevicePairingSecurityTests(APITestCase):
         self.assertEqual(read_response.status_code, 200)
         self.assertEqual(read_response.data["capabilities"]["codex"]["version"], "codex-cli 0.130.0")
         self.assertEqual(read_response.data["capabilities"]["skills"][0]["id"], "skill-one")
+
+    def test_heartbeat_reattaches_projects_from_stale_duplicate_pairing(self):
+        user = self.create_user("reattach_projects")
+        old_device = Device.objects.create(
+            owner=user,
+            name="Laptop",
+            platform="Windows-11",
+            status=Device.Status.ONLINE,
+            token_hash="old-token",
+            last_seen_at=timezone.now() - timedelta(minutes=10),
+        )
+        project = Project.objects.create(
+            owner=user,
+            device=old_device,
+            name="Repo",
+            local_path="C:\\repo\\app",
+        )
+        session = AgentSession.objects.create(
+            owner=user,
+            device=old_device,
+            project=project,
+            title="Repo chat",
+        )
+        pairing = self.create_pairing_code(user)
+        pair_response = self.pair_with_code(pairing["code"], name="Laptop", include_project=False)
+        new_device_id = pair_response.data["device"]["id"]
+        device_token = pair_response.data["device_token"]
+
+        self.client.force_authenticate(user=None)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Device {device_token}")
+        response = self.client.post("/api/cli/heartbeat/", {"busy": False}, format="json")
+
+        self.assertEqual(response.status_code, 200)
+        project.refresh_from_db()
+        session.refresh_from_db()
+        self.assertEqual(str(project.device_id), new_device_id)
+        self.assertEqual(str(session.device_id), new_device_id)
 
     def test_user_can_queue_capabilities_refresh(self):
         user = self.create_user("capabilities_refresh_user")

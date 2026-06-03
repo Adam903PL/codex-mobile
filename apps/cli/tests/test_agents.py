@@ -899,16 +899,16 @@ class CliDeviceSecurityTests(unittest.TestCase):
             called["api_url"] = client.config.api_url
             raise KeyboardInterrupt()
 
-        config = DevLinkConfig(device_id="device-1", device_token_fallback="token", api_url="http://192.168.0.238:8000/api")
+        config = DevLinkConfig(device_id="device-1", device_token_fallback="token", api_url="http://192.168.0.9:8000/api")
 
         with (
             patch("devlink_cli.main.load_config", return_value=config),
             patch("devlink_cli.main.run_daemon", side_effect=fake_run_daemon),
         ):
-            result = self.runner.invoke(main.app, ["connect", "--api-url", "http://192.168.0.238:8000/api", "--interval", "0.01"])
+            result = self.runner.invoke(main.app, ["connect", "--api-url", "http://192.168.0.9:8000/api", "--interval", "0.01"])
 
         self.assertEqual(result.exit_code, 0)
-        self.assertEqual(called["api_url"], "http://192.168.0.238:8000/api")
+        self.assertEqual(called["api_url"], "http://192.168.0.9:8000/api")
 
     def test_pair_saves_device_token(self):
         saved = {}

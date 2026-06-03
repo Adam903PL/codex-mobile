@@ -5,50 +5,51 @@ skinparam classAttributeIconSize 0
 skinparam shadowing false
 skinparam packageStyle rectangle
 
-class "CLI Daemon" as Daemon {
-  +run_task(client, task_payload)
+class "CLI Daemon" as Daemon <<service>> {
+  +run_task(client: DevLinkApiClient, task_payload: dict[str, Any]): None
 }
 
-interface AgentAdapter {
+interface AgentAdapter <<interface>> {
   +run(task: AgentTask): AsyncIterator<AgentEvent>
 }
 
-class CodexAdapter {
-  -stdout_lines: list
-  -stderr_lines: list
-  -assistant_messages: list
-  -edited_files: list
+class CodexAdapter <<adapter>> {
+  -stdout_lines: list[str]
+  -stderr_lines: list[str]
+  -assistant_messages: list[str]
+  -edited_files: list[dict[str, Any]]
   +run(task: AgentTask): AsyncIterator<AgentEvent>
 }
 
-class ShellAdapter {
+class ShellAdapter <<adapter>> {
   +run(task: AgentTask): AsyncIterator<AgentEvent>
 }
 
-class AgentTask {
+class AgentTask <<dataclass>> {
   +id: str
   +prompt: str
   +project_path: str
   +model: str
   +approval_policy: str
+  +tool_settings: dict[str, Any]
 }
 
-class AgentEvent {
+class AgentEvent <<dataclass>> {
   +event_type: str
   +message: str
-  +payload: dict
+  +payload: dict[str, Any]
 }
 
-class "Codex CLI process" as CodexProcess {
-  +codex exec --json
-  +stdout
-  +stderr
-  +exit_code
+class "Codex CLI process" as CodexProcess <<external>> {
+  +command: str = "codex exec --json"
+  +stdout: bytes
+  +stderr: bytes
+  +exit_code: int
 }
 
-class "Backend API" as BackendApi {
-  +POST /api/cli/tasks/{id}/events/
-  +PATCH /api/cli/tasks/{id}/
+class "Backend API" as BackendApi <<api>> {
+  +post_task_event(task_id: str, event: AgentEvent): TaskEvent
+  +finish_task(task_id: str, status: str): Task
 }
 
 Daemon --> AgentAdapter : uses common contract
@@ -70,5 +71,12 @@ i JSON stream z Codex CLI
 na wspolny format AgentEvent.
 end note
 
-@enduml
+legend right
+  <<service>> logika orkiestracji
+  <<interface>> wspolny kontrakt
+  <<adapter>> konkretna implementacja
+  <<dataclass>> obiekt danych
+  <<external>> system zewnetrzny
+endlegend
 
+@enduml

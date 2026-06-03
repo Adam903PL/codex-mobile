@@ -7,9 +7,13 @@ import os
 import platform
 import shutil
 import subprocess
-import tomllib
 from pathlib import Path
 from typing import Any
+
+try:
+    import tomllib
+except ModuleNotFoundError:
+    import tomli as tomllib
 
 IGNORED_FILE_INDEX_DIRS = {
     ".git",

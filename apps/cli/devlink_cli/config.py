@@ -12,7 +12,7 @@ SERVICE_NAME = "devlink-cli"
 
 
 class DevLinkConfig(BaseModel):
-    api_url: str = "http://192.168.0.238:8000/api"
+    api_url: str = "http://192.168.0.9:8000/api"
     device_id: str | None = None
     device_token_fallback: str | None = Field(default=None, repr=False)
     last_device_status: str | None = None

@@ -21,7 +21,7 @@
       }
     },
     "extra": {
-      "apiUrl": "http://192.168.0.238:8000/api"
+      "apiUrl": "http://192.168.0.9:8000/api"
     },
     "plugins": [
       "expo-secure-store"

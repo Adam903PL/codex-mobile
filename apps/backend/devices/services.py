@@ -6,13 +6,13 @@ from datetime import timedelta
 from typing import Any
 
 from django.db import transaction
-from django.db.models import QuerySet
+from django.db.models import Q, QuerySet
 from django.utils import timezone
 from rest_framework import serializers
 
 from projects.models import Project
 
-from .models import Device, PairingCode, hash_device_token
+from .models import ACTIVE_HEARTBEAT_GRACE, Device, PairingCode, hash_device_token
 
 PAIRING_CODE_LENGTH = 6
 PAIRING_CODE_TTL_MINUTES = 10
@@ -111,3 +111,62 @@ def update_device_usage_limits(device: Device, usage_limits: dict[str, Any]) -> 
     device.capabilities_updated_at = timezone.now()
     device.save(update_fields=["capabilities", "capabilities_updated_at", "updated_at"])
     return device
+
+
+@transaction.atomic
+def reattach_stale_projects_to_device(device: Device) -> int:
+    """Move projects from stale duplicate pairings back to the currently connected device."""
+    if not device.last_seen_at:
+        return 0
+
+    fresh_since = timezone.now() - ACTIVE_HEARTBEAT_GRACE
+    stale_devices = (
+        Device.objects.select_for_update()
+        .filter(owner=device.owner, name=device.name)
+        .exclude(pk=device.pk)
+        .filter(
+            Q(last_seen_at__isnull=True)
+            | Q(last_seen_at__lt=fresh_since)
+            | ~Q(status__in=[Device.Status.ONLINE, Device.Status.BUSY])
+        )
+    )
+    stale_device_ids = list(stale_devices.values_list("id", flat=True))
+    if not stale_device_ids:
+        return 0
+
+    from sessions.models import AgentSession
+
+    moved_project_ids = []
+    changed_count = 0
+    for project in Project.objects.select_for_update().filter(owner=device.owner, device_id__in=stale_device_ids, is_active=True):
+        duplicate = Project.objects.filter(
+            owner=device.owner,
+            device=device,
+            local_path=project.local_path,
+            is_active=True,
+        ).exclude(pk=project.pk).order_by("-updated_at").first()
+        if duplicate:
+            AgentSession.objects.filter(
+                owner=device.owner,
+                project=project,
+                device_id__in=stale_device_ids,
+                status=AgentSession.Status.OPEN,
+            ).update(project=duplicate, device=device, updated_at=timezone.now())
+            project.is_active = False
+            project.save(update_fields=["is_active", "updated_at"])
+            changed_count += 1
+            continue
+        project.device = device
+        project.save(update_fields=["device", "updated_at"])
+        moved_project_ids.append(project.id)
+        changed_count += 1
+
+    if moved_project_ids:
+        AgentSession.objects.filter(
+            owner=device.owner,
+            project_id__in=moved_project_ids,
+            device_id__in=stale_device_ids,
+            status=AgentSession.Status.OPEN,
+        ).update(device=device, updated_at=timezone.now())
+
+    return changed_count

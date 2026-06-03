@@ -21,6 +21,7 @@ class ProjectSettingsValidationMixin:
 class ProjectSerializer(ProjectSettingsValidationMixin, serializers.ModelSerializer):
     device_name = serializers.CharField(source="device.name", read_only=True)
     device_status = serializers.CharField(source="device.status", read_only=True)
+    device_last_seen_at = serializers.DateTimeField(source="device.last_seen_at", read_only=True)
     owner_username = serializers.CharField(source="owner.username", read_only=True)
 
     class Meta:
@@ -31,6 +32,7 @@ class ProjectSerializer(ProjectSettingsValidationMixin, serializers.ModelSeriali
             "device",
             "device_name",
             "device_status",
+            "device_last_seen_at",
             "name",
             "local_path",
             "repository_url",
@@ -48,6 +50,7 @@ class ProjectSerializer(ProjectSettingsValidationMixin, serializers.ModelSeriali
             "device",
             "device_name",
             "device_status",
+            "device_last_seen_at",
             "local_path",
             "repository_url",
             "is_active",

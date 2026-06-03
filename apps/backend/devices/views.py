@@ -18,7 +18,7 @@ from .serializers import (
     PairDeviceSerializer,
     PairingCodeSerializer,
 )
-from .services import revoke_device
+from .services import reattach_stale_projects_to_device, revoke_device
 
 
 class PairingCodeCreateView(generics.CreateAPIView):
@@ -80,6 +80,9 @@ class CliHeartbeatView(APIView):
         device.status = Device.Status.BUSY if request.data.get("busy") else Device.Status.ONLINE
         device.last_seen_at = timezone.now()
         device.save(update_fields=["status", "last_seen_at", "updated_at"])
+        moved_count = reattach_stale_projects_to_device(device)
+        if moved_count:
+            broadcast_workspace_updated_for_device(device, reason="projects.reattached")
         return Response(DeviceSerializer(device).data)
 
 
@@ -116,8 +119,9 @@ class CliCapabilitiesView(APIView):
         device.capabilities = request.data
         device.capabilities_updated_at = timezone.now()
         device.save(update_fields=["capabilities", "capabilities_updated_at", "updated_at"])
+        moved_count = reattach_stale_projects_to_device(device)
         device_payload = DeviceCapabilitiesSerializer(device).data
         for session in AgentSession.objects.filter(device=device, status=AgentSession.Status.OPEN)[:20]:
             broadcast_session_capabilities_updated(session, device_payload)
-        broadcast_workspace_updated_for_device(device, reason="capabilities.updated")
+        broadcast_workspace_updated_for_device(device, reason="projects.reattached" if moved_count else "capabilities.updated")
         return Response(device_payload)

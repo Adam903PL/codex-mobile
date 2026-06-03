@@ -1,6 +1,8 @@
+declare const process: { env: Record<string, string | undefined> };
+
 export const LEGACY_LOCAL_API_URL = "http://127.0.0.1:8000/api";
-export const DEFAULT_LAN_API_BASE_URL = "http://192.168.0.238:8000";
-export const SCHOOL_LAN_API_BASE_URL = "http://192.168.0.238:8000";
+export const DEFAULT_LAN_API_BASE_URL = "http://192.168.0.9:8000";
+export const SCHOOL_LAN_API_BASE_URL = "http://192.168.0.9:8000";
 const CURRENT_LAN_API_BASE_URL = DEFAULT_LAN_API_BASE_URL;
 const DEFAULT_API_URL = process.env.EXPO_PUBLIC_API_URL ?? `${CURRENT_LAN_API_BASE_URL}/api`;
 let apiUrlOverride: string | null = null;
@@ -52,6 +54,7 @@ export type Project = {
   device: string;
   device_name: string;
   device_status: string;
+  device_last_seen_at?: string | null;
   name: string;
   local_path: string;
   repository_url: string;

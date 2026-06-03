@@ -100,6 +100,7 @@ const LONG_FINAL_LINES = 14;
 const PICKER_BOTTOM_OFFSET = Platform.OS === "ios" ? 128 : 118;
 const PLUS_POPUP_BOTTOM_OFFSET = 210;
 const PICKER_MAX_HEIGHT = Math.min(380, Math.round(SH * 0.46));
+const DEVICE_HEARTBEAT_GRACE_MS = 2 * 60 * 1000;
 
 const C = {
   bg0: "#0a0a0a",
@@ -129,13 +130,21 @@ function isConnectedDeviceStatus(status?: string | null) {
   return CONNECTED_DEVICE_STATUSES.has(String(status || "").toLowerCase());
 }
 
+function isFreshHeartbeat(value?: string | null) {
+  if (!value) return false;
+  const timestamp = Date.parse(value);
+  return Number.isFinite(timestamp) && Date.now() - timestamp <= DEVICE_HEARTBEAT_GRACE_MS;
+}
+
 function projectDeviceStatus(project: Project | null | undefined, devices: Device[]) {
   const device = devices.find((item) => item.id === project?.device);
   return device?.status || project?.device_status || "";
 }
 
 function projectHasConnectedDevice(project: Project | null | undefined, devices: Device[]) {
-  return Boolean(project && project.is_active && isConnectedDeviceStatus(projectDeviceStatus(project, devices)));
+  if (!project || !project.is_active || !isConnectedDeviceStatus(projectDeviceStatus(project, devices))) return false;
+  const device = devices.find((item) => item.id === project.device);
+  return isFreshHeartbeat(device?.last_seen_at || project.device_last_seen_at);
 }
 
 function choosePreferredProject(projects: Project[], devices: Device[]) {
@@ -146,7 +155,7 @@ function canReuseSession(session: AgentSession | null, selectedProjectId: string
   if (!session || session.status === "closed") return false;
   if (selectedProjectId && session.project !== selectedProjectId) return false;
   const project = projects.find((item) => item.id === session.project);
-  return projectHasConnectedDevice(project, devices) || isConnectedDeviceStatus(session.device_status);
+  return projectHasConnectedDevice(project, devices);
 }
 
 type LimitUsage = {
@@ -2516,8 +2525,8 @@ const styles = StyleSheet.create({
   toolbarPillTextActive: { color: C.bg0 },
   terminalToolbarBtn: { width: 36, height: 32, borderRadius: 9, alignItems: "center", justifyContent: "center", borderWidth: 1, borderColor: C.bd2, backgroundColor: C.bg2 },
   terminalToolbarBtnDisabled: { opacity: 0.45 },
-  overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.6)" },
-  drawerRoot: { ...StyleSheet.absoluteFillObject, zIndex: 100 },
+  overlay: { ...StyleSheet.absoluteFill, backgroundColor: "rgba(0,0,0,0.6)" },
+  drawerRoot: { ...StyleSheet.absoluteFill, zIndex: 100 },
   drawerPanel: { position: "absolute", top: 0, bottom: 0, left: 0, width: SW * 0.82, backgroundColor: C.bg1, borderRightWidth: 1, borderRightColor: C.bd0 },
   drawerTop: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 14, gap: 10 },
   drawerLogo: { width: 28, height: 28, borderRadius: 8, backgroundColor: C.tx0, alignItems: "center", justifyContent: "center" },
@@ -2556,7 +2565,7 @@ const styles = StyleSheet.create({
   usageRowRight: { color: C.tx2, fontSize: 12, width: 40, textAlign: "right" },
   usageReset: { color: C.tx2, fontSize: 12, width: 52, textAlign: "right" },
   usageSource: { color: C.tx3, fontSize: 11 },
-  popupBg: { ...StyleSheet.absoluteFillObject, zIndex: 48 },
+  popupBg: { ...StyleSheet.absoluteFill, zIndex: 48 },
   popup: { position: "absolute", left: 14, backgroundColor: C.bg2, borderRadius: 14, borderWidth: 1, borderColor: C.bd1, overflow: "hidden", zIndex: 50, minWidth: 220 },
   popupItem: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 13, borderBottomWidth: 1, borderBottomColor: C.bd0 },
   popupItemLabel: { flex: 1, color: C.tx0, fontSize: 14 },

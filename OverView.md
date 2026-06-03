@@ -643,7 +643,7 @@ npm run start
 4. Sparuj CLI:
 
 ```powershell
-devlink pair --code <KOD> --name "Laptop" --api-url http://192.168.0.238:8000/api
+devlink pair --code <KOD> --name "Laptop" --api-url http://192.168.0.9:8000/api
 ```
 
 5. Dodaj workspace:
@@ -655,7 +655,7 @@ devlink projects add --path C:\path\to\repo --name "My Project"
 6. Uruchom bridge:
 
 ```powershell
-devlink connect --api-url http://192.168.0.238:8000/api
+devlink connect --api-url http://192.168.0.9:8000/api
 ```
 
 ## 16. Najczestsze problemy
@@ -678,7 +678,7 @@ Trzeba sprawdzic:
 Mozna podac backend bezposrednio:
 
 ```powershell
-devlink connect --api-url http://192.168.0.238:8000/api
+devlink connect --api-url http://192.168.0.9:8000/api
 ```
 
 ### Workspace nie pojawia sie w mobile
